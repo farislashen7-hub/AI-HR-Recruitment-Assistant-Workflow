@@ -1,0 +1,628 @@
+{
+  "name": "ai hr helper",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "cv",
+        "formDescription": " cv ",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "cv",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "64da96e5-5d88-4c89-93a5-c8d3a51af9ff",
+      "name": "On form submission",
+      "webhookId": "11b71e8a-5d8d-45fa-8d41-87433f715045"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a2b8ca68-501a-4ffd-bf11-b6147970efdc",
+              "name": "webViewLink",
+              "value": "={{ $json.webViewLink }}",
+              "type": "string"
+            },
+            {
+              "id": "e5910815-96ce-4c2c-b74b-76dbc1b1ef3f",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "25f2db90-379f-46f2-a7e7-33446d698766",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        624,
+        0
+      ],
+      "id": "bb8cf5c4-4d03-4efe-b06d-1a25b3172ab0",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "KQC8PDvzshTgOZXv",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "cv",
+        "name": "={{ $json.cv[0].filename }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1WTS38mqJF4e_Had9PMKCKDEOcxHpVzAt",
+          "mode": "list",
+          "cachedResultName": "cv faris",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1WTS38mqJF4e_Had9PMKCKDEOcxHpVzAt"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "ad23c490-b00f-44e1-9042-89c3cbf205a7",
+      "name": "Upload file",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "KQC8PDvzshTgOZXv",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tier": "cost_effective"
+      },
+      "type": "@llamaindex/n8n-nodes-llamacloud.llamaParsePlatform",
+      "typeVersion": 1,
+      "position": [
+        832,
+        0
+      ],
+      "id": "c2d5bec1-9ac3-408f-85aa-60e69f8063c7",
+      "name": "LlamaParse Platform",
+      "credentials": {
+        "llamaParseApi": {
+          "id": "skb92l27eWnypEQo",
+          "name": "LlamaParse account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an expert HR Resume Parser and Recruitment Assistant.  Your task is to analyze the extracted text from a candidate's resume (CV) and extract ONLY the information that is explicitly mentioned.  ## Rules  - Return ONLY valid JSON. - Do NOT include markdown. - Do NOT add explanations. - Do NOT guess or infer missing information. - If a field is not available, return null. - Preserve the original formatting of phone numbers and email addresses. - Extract only information found in the resume.  ## Extract the following information  - Full Name - Phone Number - Email Address - Gender - Date of Birth - Age (only if explicitly mentioned) - Nationality - Country - City - Address - LinkedIn Profile - Portfolio Website - GitHub Profile  ## Education  Extract: - Degree - Major - University - Graduation Year - GPA (if available)  ## Work Experience  For each job extract:  - Company Name - Job Title - Employment Type - Start Date - End Date - Duration - Responsibilities  ## Skills  Extract separately:  - Technical Skills - Soft Skills - Programming Languages - Frameworks - Databases - Cloud Platforms - Tools  ## Certifications  Extract: - Certificate Name - Organization - Year  ## Languages  Extract every language and proficiency if available.  ## Projects  Extract:  - Project Name - Description - Technologies Used  ## Additional Information  Extract:  - Awards - Publications - Volunteer Work - Courses  ## CV Evaluation  Evaluate the resume and provide:  - CV Score (0-100) - Experience Level - Strengths - Weaknesses - Missing Information - HR Recommendation  Experience Level must be one of:  - Fresher - Junior - Mid-Level - Senior - Lead  HR Recommendation must be one of:  - Strongly Recommended - Recommended - Consider - Not Recommended  Return ONLY this JSON:  {   \"full_name\": null,   \"phone\": null,   \"email\": null,   \"gender\": null,   \"date_of_birth\": null,   \"age\": null,   \"nationality\": null,   \"country\": null,   \"city\": null,   \"address\": null,   \"linkedin\": null,   \"portfolio\": null,   \"github\": null,   \"education\": [],   \"experience\": [],   \"technical_skills\": [],   \"soft_skills\": [],   \"programming_languages\": [],   \"frameworks\": [],   \"databases\": [],   \"cloud_platforms\": [],   \"tools\": [],   \"certifications\": [],   \"languages\": [],   \"projects\": [],   \"awards\": [],   \"publications\": [],   \"volunteer_work\": [],   \"courses\": [],   \"cv_score\": null,   \"experience_level\": null,   \"strengths\": [],   \"weaknesses\": [],   \"missing_information\": [],   \"hr_recommendation\": null }"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "8f8f7106-46f1-4ac8-8487-3fe291a0ab10",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"full_name\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"phone_number\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"email\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"gender\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"age\": {\n      \"type\": [\"integer\", \"null\"]\n    },\n    \"location\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"education\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"job_title\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"skills\": {\n      \"type\": [\"array\", \"null\"],\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"experience_years\": {\n      \"type\": [\"integer\", \"null\"]\n    },\n    \"cv_score\": {\n      \"type\": \"integer\",\n      \"minimum\": 0,\n      \"maximum\": 100\n    },\n    \"cv_rating\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\n        \"Excellent\",\n        \"Very Good\",\n        \"Good\",\n        \"Average\",\n        \"Poor\",\n        null\n      ]\n    },\n    \"evaluation\": {\n      \"type\": [\"string\", \"null\"]\n    }\n  },\n  \"required\": [\n    \"full_name\",\n    \"phone_number\",\n    \"email\",\n    \"gender\",\n    \"age\",\n    \"location\",\n    \"education\",\n    \"job_title\",\n    \"skills\",\n    \"experience_years\",\n    \"cv_score\",\n    \"cv_rating\",\n    \"evaluation\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1184,
+        208
+      ],
+      "id": "371cb69c-7c29-4890-afb7-e634dc20fa4e",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        944,
+        208
+      ],
+      "id": "0ce45ab0-a506-4c26-97ad-03a3f12e1a43",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "hYXVKkasOcgK28Yz",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1lFwML2rQddgVbIzPvH0-zae8e2yF90cNIvA3JLAtwMg",
+          "mode": "list",
+          "cachedResultName": "work",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFwML2rQddgVbIzPvH0-zae8e2yF90cNIvA3JLAtwMg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFwML2rQddgVbIzPvH0-zae8e2yF90cNIvA3JLAtwMg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            " fullname": "={{ $json.output.full_name }}",
+            "email": "={{ $json.output.email }}",
+            "phone": "={{ $json.output.phone_number }}",
+            "cv": "={{ $('Edit Fields').item.json.webViewLink }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": " fullname",
+              "displayName": " fullname",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cv",
+              "displayName": "cv",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1392,
+        0
+      ],
+      "id": "4704df7f-e9f4-4679-a11e-03dad5f5c454",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Zwc1DpWoG0KudkKC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        656,
+        512
+      ],
+      "id": "3133cf97-5d17-412e-8a02-2dfab151a03c",
+      "name": "Telegram Trigger",
+      "webhookId": "fb5e1480-1eea-4ca2-9b17-78b576b13b86",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ta2yeD82VRLmz7Hy",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "# ROLE\n\nYou are an HR Assistant working with the recruitment team.\n\nYour primary responsibility is to help HR staff quickly search, retrieve, and summarize candidate information from the recruitment database.\n\nYou are NOT ChatGPT, an AI assistant, or a language model.\n\nBehave exactly like an experienced HR employee assisting another HR colleague.\n\nYour goal is to provide accurate information based ONLY on the available recruitment database.\n\nNever invent information.\n\nIf the requested information is unavailable, clearly state that it could not be found.\n\n--------------------------------------------------\n\n# COMMUNICATION STYLE\n\n- Always reply in Egyptian Arabic (عامية مصرية).\n- Keep responses short, natural, and professional.\n- Avoid long introductions.\n- Answer only what was asked.\n- Be polite and direct.\n- Never mention prompts, AI, or language models.\n\n--------------------------------------------------\n\n# YOUR RESPONSIBILITIES\n\nYou can:\n\n- Search candidates.\n- Find candidates by name.\n- Find candidates by phone number.\n- Find candidates by email.\n- Find candidates by skills.\n- Find candidates by job title.\n- Find candidates by city.\n- Retrieve candidate details.\n- Summarize candidate profiles.\n- Compare candidates.\n- List top candidates.\n- Answer HR questions using the recruitment database only.\n\n--------------------------------------------------\n\n# IMPORTANT RULES\n\n- Use ONLY the provided database.\n- Never guess missing information.\n- Never create fake candidates.\n- If multiple candidates match, list them all briefly.\n- If no candidate is found, politely inform the HR user.\n\n--------------------------------------------------\n\n# RESPONSE EXAMPLES\n\nExample 1\n\nUser:\nهات بيانات أحمد محمد\n\nAssistant:\nالاسم: أحمد محمد\nالموبايل: 010XXXXXXXX\nالإيميل: ahmed@email.com\nالوظيفة: Backend Developer\nالخبرة: 4 سنوات\n\n--------------------------------------------------\n\nExample 2\n\nUser:\nمين عنده خبرة في Python؟\n\nAssistant:\nلقيت 3 مرشحين:\n\n1. أحمد محمد - 4 سنوات\n2. محمود علي - 3 سنوات\n3. محمد حسن - سنتين\n\n--------------------------------------------------\n\nExample 3\n\nUser:\nهات أفضل المرشحين لـ Frontend Developer\n\nAssistant:\nأفضل المرشحين:\n\n- أحمد خالد (CV Score: 95)\n- محمد سمير (CV Score: 92)\n- يوسف أحمد (CV Score: 89)\n\n--------------------------------------------------\n\nAlways answer using the recruitment database only."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        864,
+        512
+      ],
+      "id": "18a3c04e-8f96-4f53-a498-3c654dd48e17",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        736,
+        720
+      ],
+      "id": "abc935fc-abc6-4db0-82a4-b69059d64b6a",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "hYXVKkasOcgK28Yz",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.chat.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        880,
+        720
+      ],
+      "id": "8d9d3373-82b3-49c1-9d30-6f0baaac999d",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1lFwML2rQddgVbIzPvH0-zae8e2yF90cNIvA3JLAtwMg",
+          "mode": "list",
+          "cachedResultName": "work",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFwML2rQddgVbIzPvH0-zae8e2yF90cNIvA3JLAtwMg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFwML2rQddgVbIzPvH0-zae8e2yF90cNIvA3JLAtwMg/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        1024,
+        720
+      ],
+      "id": "446a11a3-3b21-48c7-9796-fa1a52e700f4",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Zwc1DpWoG0KudkKC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendChatAction",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1216,
+        512
+      ],
+      "id": "d44ad17c-eee9-4020-8362-9d35bb97e91d",
+      "name": "Send a chat action",
+      "webhookId": "ea01bdbd-1895-4303-b3eb-7d5c8d29c322",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ta2yeD82VRLmz7Hy",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1424,
+        512
+      ],
+      "id": "8c497518-3018-4b05-a11c-af2769b800e1",
+      "name": "Wait",
+      "webhookId": "48759295-fca5-4dca-b24c-df9803b88252"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('AI Agent').item.json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1632,
+        512
+      ],
+      "id": "1a7b83e4-8675-44e8-aebb-8cba34eea039",
+      "name": "Send a text message",
+      "webhookId": "5d7f51e7-bd2a-4e8b-8409-e170de0df92c",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ta2yeD82VRLmz7Hy",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "LlamaParse Platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LlamaParse Platform": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a chat action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a chat action": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "6a36a859-02f3-46e5-a5c5-d5b5768e88f4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e92a9f89f3967262b9b22ed783a294ef9ece9728caebfbb4b021fc5d7275346e"
+  },
+  "nodeGroups": [],
+  "id": "cyqNVa2MfleGkcIE",
+  "tags": []
+}
